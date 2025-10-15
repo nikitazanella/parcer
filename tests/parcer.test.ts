@@ -107,18 +107,23 @@ describe("parcer", () => {
     expect(console.error).toHaveBeenCalledWith("Error: Permission denied");
   });
 
-  it("should ensure correct JSON structure", async () => {
-    await parcer(inputPath, outputPath);
+  it("should convert CSV to JSON with flattening when flatten option is true", async () => {
+    const csvDataWithDots = "user.name,user.age,occupation\nAlice,30,Engineer\nBob,25,Designer";
+    (fs.readFile as jest.Mock).mockResolvedValue(csvDataWithDots);
 
-    const expectedJson = [
-      { name: "John", age: "30" },
-      { name: "Jane", age: "25" },
-    ];
+    await parcer(inputPath, outputPath, { flatten: true });
 
     expect(fs.readFile).toHaveBeenCalledWith(inputPath, "utf8");
     expect(fs.writeFile).toHaveBeenCalledWith(
       outputPath,
-      JSON.stringify(expectedJson, null, 2)
+      JSON.stringify(
+        [
+          { user: { name: "Alice", age: "30" }, occupation: "Engineer" },
+          { user: { name: "Bob", age: "25" }, occupation: "Designer" },
+        ],
+        null,
+        2
+      )
     );
   });
 });
